@@ -37,6 +37,7 @@ It does **not** make Windows Shell expose multiple simultaneously active native 
 - Diagnostics report export under `%LOCALAPPDATA%\PerMonitorVD\reports`.
 - Home overlay for viewing each monitor's PMVD desktops and active apps.
 - Drag app chips directly onto a desktop card to move that app to another PMVD workspace.
+- Tray menu lists apps on other PMVD desktops so you can jump directly to the desktop containing that app.
 - Task View-like monitor lanes with workspace cards and per-monitor maximum managed-window limits.
 - Best-effort Windows taskbar setting so the taskbar shows apps from all native virtual desktops.
 
@@ -60,6 +61,15 @@ src/pvdctl
 `Slions.VirtualDesktop` uses undocumented Windows virtual desktop interfaces, so Windows build changes can break the native VD bridge. The code isolates this behind `IVirtualDesktopBridge` so a future bridge can replace it.
 
 ## Build
+
+For normal use, download the `per-monitor-virtual-desktop-*-win-x64.zip` asset from GitHub Releases, unzip it, then run:
+
+```powershell
+.\PerMonitorVD.exe
+.\pvdctl.exe status
+```
+
+The release zip is self-contained for Windows x64 and does not require installing the .NET runtime.
 
 ```powershell
 cd PerMonitorVD
@@ -118,6 +128,7 @@ pvdctl return-active
 pvdctl rescue-all
 pvdctl diagnostics
 pvdctl home
+pvdctl activate-window --hwnd 0x00000000000A1234
 pvdctl pause
 pvdctl resume
 pvdctl status
@@ -156,6 +167,10 @@ From Home you can:
 
 When a monitor reaches its maximum managed-window count, PMVD stops automatically tracking newly discovered windows on that monitor. Explicit moves into a full monitor are skipped and logged.
 
+## Tray app jump menu
+
+Right-click the PMVD tray icon and open `Other desktop apps`. The menu lists apps that belong to another PMVD desktop on each monitor. Selecting an app switches only that monitor to the app's desktop and brings the window forward.
+
 ## Development sequence
 
 1. Build and run `PerMonitorVD.exe`.
@@ -166,6 +181,7 @@ When a monitor reaches its maximum managed-window count, PMVD stops automaticall
 6. Press `Ctrl+Alt+Shift+Left` and confirm monitor 1 returns.
 7. Run `pvdctl diagnostics` and save the returned report path.
 8. Open PMVD Home with `Ctrl+Alt+Shift+Home` and verify that app chips can be dragged onto another desktop card.
-9. Configure Logitech gestures to send the default Left/Right/Up/Down hotkeys.
-10. Open tray menu -> `Edit config` and tune window rules if needed.
-11. Enable `EnableWinCtrlOverride` only after the normal custom-hotkey path is stable.
+9. Right-click the tray icon -> `Other desktop apps` and verify that an app on another PMVD desktop jumps to its desktop.
+10. Configure Logitech gestures to send the default Left/Right/Up/Down hotkeys.
+11. Open tray menu -> `Edit config` and tune window rules if needed.
+12. Enable `EnableWinCtrlOverride` only after the normal custom-hotkey path is stable.

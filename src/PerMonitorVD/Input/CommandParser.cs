@@ -32,6 +32,7 @@ public static class CommandParser
             "rescue-all" => new WorkspaceCommand { Type = WorkspaceCommandType.RescueAll },
             "diagnostics" => new WorkspaceCommand { Type = WorkspaceCommandType.Diagnostics },
             "home" => new WorkspaceCommand { Type = WorkspaceCommandType.ShowHome },
+            "activate-window" => new WorkspaceCommand { Type = WorkspaceCommandType.ActivateWindow, Hwnd = ReadOption(args, "--hwnd") },
             "pause" => new WorkspaceCommand { Type = WorkspaceCommandType.Pause },
             "resume" => new WorkspaceCommand { Type = WorkspaceCommandType.Resume },
             "status" => new WorkspaceCommand { Type = WorkspaceCommandType.Status },

@@ -59,6 +59,7 @@ internal static class Program
           pvdctl rescue-all
           pvdctl diagnostics
           pvdctl home
+          pvdctl activate-window --hwnd 0x00000000000A1234
           pvdctl pause
           pvdctl resume
           pvdctl status

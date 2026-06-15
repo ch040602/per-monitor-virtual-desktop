@@ -28,6 +28,7 @@ public sealed class CommandRouter
                 or WorkspaceCommandType.RescueAll
                 or WorkspaceCommandType.Diagnostics
                 or WorkspaceCommandType.ShowHome
+                or WorkspaceCommandType.ActivateWindow
                 or WorkspaceCommandType.Pause
                 or WorkspaceCommandType.Resume
                 ? _state.Monitors.FirstOrDefault()?.MonitorKey ?? ""
@@ -85,6 +86,11 @@ public sealed class CommandRouter
                     HomeRequested?.Invoke(this, EventArgs.Empty);
                     return "OK home";
 
+                case WorkspaceCommandType.ActivateWindow:
+                    if (string.IsNullOrWhiteSpace(command.Hwnd)) return "ERR missing hwnd";
+                    await _engine.ActivateWindowAsync(command.Hwnd);
+                    return "OK activate-window";
+
                 case WorkspaceCommandType.Pause:
                     _engine.Pause();
                     return "OK pause";
@@ -107,4 +113,5 @@ public sealed class CommandRouter
         }
     }
 
+    public Task<HomeSnapshot> GetHomeSnapshotAsync() => _engine.GetHomeSnapshotAsync();
 }

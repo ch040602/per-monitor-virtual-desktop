@@ -11,6 +11,7 @@ public sealed class TrayIconService : IDisposable
     private readonly ConfigStore _configStore;
     private readonly Action<AppConfig> _onConfigSaved;
     private readonly Action _showHome;
+    private readonly ToolStripMenuItem _otherDesktopAppsMenu = new("Other desktop apps");
 
     public TrayIconService(CommandRouter router, ConfigStore configStore, Action<AppConfig> onConfigSaved, Action showHome)
     {
@@ -34,6 +35,8 @@ public sealed class TrayIconService : IDisposable
         var menu = new ContextMenuStrip();
 
         menu.Items.Add("Home", null, (_, _) => _showHome());
+        menu.Items.Add(_otherDesktopAppsMenu);
+        menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Status", null, async (_, _) => await ShowStatusAsync());
         menu.Items.Add("Return to active desktop", null, async (_, _) => await _router.ExecuteAsync(new WorkspaceCommand { Type = WorkspaceCommandType.ReturnActive }));
         menu.Items.Add("Refresh windows", null, async (_, _) => await _router.ExecuteAsync(new WorkspaceCommand { Type = WorkspaceCommandType.Refresh }));
@@ -50,7 +53,76 @@ public sealed class TrayIconService : IDisposable
         menu.Items.Add("Open config folder", null, (_, _) => OpenPath(AppPaths.BaseDirectory));
         menu.Items.Add("Exit", null, (_, _) => Application.Exit());
 
+        menu.Opening += async (_, _) => await RefreshOtherDesktopAppsMenuAsync();
         return menu;
+    }
+
+    private async Task RefreshOtherDesktopAppsMenuAsync()
+    {
+        _otherDesktopAppsMenu.DropDownItems.Clear();
+
+        try
+        {
+            var snapshot = await _router.GetHomeSnapshotAsync();
+            var currentWorkspaceByMonitor = snapshot.Workspaces
+                .Where(w => w.IsCurrent)
+                .ToDictionary(w => w.MonitorKey, w => w.WorkspaceId, StringComparer.OrdinalIgnoreCase);
+
+            var hiddenApps = snapshot.Windows
+                .Where(w => !w.Ignored)
+                .Where(w => currentWorkspaceByMonitor.TryGetValue(w.MonitorKey, out var currentWorkspaceId)
+                            && !string.Equals(w.WorkspaceId, currentWorkspaceId, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(w => w.MonitorKey)
+                .ThenBy(w => w.WorkspaceLabel)
+                .ThenBy(w => w.ProcessName)
+                .ThenBy(w => w.Title)
+                .ToArray();
+
+            if (hiddenApps.Length == 0)
+            {
+                AddDisabledMenuItem(_otherDesktopAppsMenu.DropDownItems, "No apps on other desktops");
+                _otherDesktopAppsMenu.Enabled = true;
+                return;
+            }
+
+            foreach (var monitorGroup in hiddenApps.GroupBy(w => w.MonitorKey, StringComparer.OrdinalIgnoreCase))
+            {
+                var monitorName = snapshot.Monitors.FirstOrDefault(m => string.Equals(m.MonitorKey, monitorGroup.Key, StringComparison.OrdinalIgnoreCase))?.MonitorName
+                                  ?? monitorGroup.Key;
+                var monitorItem = new ToolStripMenuItem(monitorName);
+
+                foreach (var workspaceGroup in monitorGroup.GroupBy(w => w.WorkspaceLabel).OrderBy(g => g.Key))
+                {
+                    var desktopItem = new ToolStripMenuItem($"Desktop {workspaceGroup.Key}");
+                    foreach (var window in workspaceGroup)
+                    {
+                        var text = FormatWindowMenuText(window);
+                        var item = new ToolStripMenuItem(text)
+                        {
+                            ToolTipText = string.IsNullOrWhiteSpace(window.Title) ? window.ProcessName : window.Title
+                        };
+                        item.Click += async (_, _) => await _router.ExecuteAsync(new WorkspaceCommand
+                        {
+                            Type = WorkspaceCommandType.ActivateWindow,
+                            Hwnd = window.Hwnd
+                        });
+                        desktopItem.DropDownItems.Add(item);
+                    }
+
+                    monitorItem.DropDownItems.Add(desktopItem);
+                }
+
+                _otherDesktopAppsMenu.DropDownItems.Add(monitorItem);
+            }
+
+            _otherDesktopAppsMenu.Enabled = true;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to refresh other desktop apps menu.");
+            AddDisabledMenuItem(_otherDesktopAppsMenu.DropDownItems, "Could not load app list");
+            _otherDesktopAppsMenu.Enabled = true;
+        }
     }
 
     private async Task ShowStatusAsync()
@@ -87,6 +159,26 @@ public sealed class TrayIconService : IDisposable
         {
             Log.Error(ex, $"Failed to open path: {path}");
         }
+    }
+
+    private static void AddDisabledMenuItem(ToolStripItemCollection items, string text)
+    {
+        items.Add(new ToolStripMenuItem(text) { Enabled = false });
+    }
+
+    private static string FormatWindowMenuText(WindowHomeItem window)
+    {
+        var title = string.IsNullOrWhiteSpace(window.Title) ? "" : " - " + TrimMiddle(window.Title, 72);
+        return $"{window.ProcessName}{title}";
+    }
+
+    private static string TrimMiddle(string value, int maxLength)
+    {
+        if (value.Length <= maxLength)
+            return value;
+
+        var side = Math.Max(1, (maxLength - 3) / 2);
+        return value[..side] + "..." + value[^side..];
     }
 
     public void Dispose()

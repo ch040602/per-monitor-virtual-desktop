@@ -425,6 +425,44 @@ public sealed class WorkspaceEngine
         }
     }
 
+    public async Task ActivateWindowAsync(string hwnd)
+    {
+        await _gate.WaitAsync();
+        try
+        {
+            if (IsPaused) return;
+
+            if (!_state.Windows.TryGetValue(hwnd, out var record) || !_windowTracker.IsAlive(record))
+                return;
+
+            var monitor = _state.Monitors.FirstOrDefault(m => string.Equals(m.MonitorKey, record.MonitorKey, StringComparison.OrdinalIgnoreCase));
+            if (monitor is null)
+                return;
+
+            var targetIndex = monitor.Workspaces.FindIndex(w => string.Equals(w.WorkspaceId, record.WorkspaceId, StringComparison.OrdinalIgnoreCase));
+            if (targetIndex < 0)
+                return;
+
+            EnsureOnActiveCompositeDesktop();
+            if (monitor.CurrentWorkspaceIndex != targetIndex)
+                await SwitchWorkspaceCoreAsync(monitor.MonitorKey, targetIndex);
+
+            await RestoreWindowAsync(record);
+            Win32.ShowWindowAsync(record.HwndPtr, Win32.SW_RESTORE);
+            await Task.Delay(40);
+            Win32.SetForegroundWindow(record.HwndPtr);
+            _overlay.ShowWorkspace(monitor.MonitorKey, $"App -> {monitor.Workspaces[targetIndex].Label}", _config.ShowOverlay);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, $"ActivateWindow failed: hwnd={hwnd}");
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
     public async Task MergeWorkspaceAsync(string sourceWorkspaceId, string targetWorkspaceId)
     {
         if (string.Equals(sourceWorkspaceId, targetWorkspaceId, StringComparison.OrdinalIgnoreCase))

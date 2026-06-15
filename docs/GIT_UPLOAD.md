@@ -2,7 +2,7 @@
 
 ## Repository description
 
-Per-monitor virtual desktop control for Windows. PMVD switches workspaces per display, parks inactive windows on native virtual desktops, and includes a Task View-like Home overlay for drag-and-drop app movement and per-monitor window caps.
+Per-monitor virtual desktop control for Windows. PMVD switches workspaces per display, parks inactive windows on native virtual desktops, includes a Task View-like Home overlay, and adds a tray jump menu for apps on other PMVD desktops.
 
 ## Suggested topics
 
@@ -22,23 +22,25 @@ native-windows
 ## Suggested release tag
 
 ```text
-v0.2.0-phase2
+v0.2.1
 ```
 
 ## Suggested release title
 
 ```text
-PerMonitorVD Phase 2 - per-monitor switching, diagnostics, and drag-and-drop Home
+PerMonitorVD v0.2.1 - tray jump menu and exe release
 ```
 
 ## Suggested commit message
 
 ```text
-Add drag-and-drop PMVD Home and multilingual docs
+Add tray jump menu and release packaging
 
 - add Ctrl+Alt+Shift+Home and tray Home entry
 - show each monitor's PMVD desktops and active apps
 - move apps by dragging app chips onto desktop cards
+- jump to apps on other PMVD desktops from the tray menu
+- add pvdctl activate-window
 - add Task View-like monitor desktop cards
 - add per-monitor maximum managed-window limits
 - keep taskbar configured for all virtual desktop windows
@@ -54,9 +56,12 @@ Add drag-and-drop PMVD Home and multilingual docs
 - Per-monitor workspace switching using native virtual desktop parking.
 - PMVD Home overlay for viewing each monitor's desktops and active apps.
 - Drag-and-drop app movement between desktop cards.
+- Tray `Other desktop apps` menu that jumps to an app's PMVD desktop.
+- `pvdctl activate-window --hwnd <HWND>` for scriptable app jumps.
 - Task View-like monitor lanes with desktop cards.
 - Per-monitor maximum managed-window limits from Home.
 - `Ctrl+Alt+Shift+Home`, tray menu Home entry, and `pvdctl home`.
+- Self-contained Windows x64 release zip with `PerMonitorVD.exe` and `pvdctl.exe`.
 - Diagnostics export with report path output.
 - Best-effort taskbar configuration so Windows shows apps from all native virtual desktops.
 - English default README plus Korean and Simplified Chinese translations.
