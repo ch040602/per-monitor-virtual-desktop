@@ -1,0 +1,6 @@
+**/bin/
+**/obj/
+.codex/
+.vs/
+*.user
+*.suo
