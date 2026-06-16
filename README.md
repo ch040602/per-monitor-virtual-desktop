@@ -38,7 +38,7 @@ It does **not** make Windows Shell expose multiple simultaneously active native 
 - Home overlay for viewing each monitor's PMVD desktops and active apps.
 - Drag app chips directly onto a desktop card to move that app to another PMVD workspace.
 - Tray menu lists apps on other PMVD desktops so you can jump directly to the desktop containing that app.
-- Task View-like monitor lanes with workspace cards and per-monitor maximum managed-window limits.
+- Task View-like monitor lanes with workspace cards and per-monitor desktop counts.
 - Best-effort Windows taskbar setting so the taskbar shows apps from all native virtual desktops.
 - Runs as a system tray app and can register itself to start with Windows.
 
@@ -169,10 +169,8 @@ From Home you can:
 
 - View monitor lanes and desktop cards in a layout similar to Windows Task View.
 - Drag an app chip onto another desktop card to move that app immediately.
-- Set each monitor's maximum managed-window count. `0` means unlimited.
+- Set each monitor's PMVD desktop count with `Max`.
 - Refresh the view after moving windows manually.
-
-When a monitor reaches its maximum managed-window count, PMVD stops automatically tracking newly discovered windows on that monitor. Explicit moves into a full monitor are skipped and logged.
 
 ## Tray app jump menu
 
@@ -188,7 +186,8 @@ Right-click the PMVD tray icon and open `Other desktop apps`. The menu lists app
 6. Press `Ctrl+Alt+Shift+Left` and confirm monitor 1 returns.
 7. Run `pvdctl diagnostics` and save the returned report path.
 8. Open PMVD Home with `Ctrl+Alt+Shift+Home` and verify that app chips can be dragged onto another desktop card.
-9. Right-click the tray icon -> `Other desktop apps` and verify that an app on another PMVD desktop jumps to its desktop.
-10. Configure Logitech gestures to send the default Left/Right/Up/Down hotkeys.
-11. Open tray menu -> `Edit config` and tune window rules if needed.
-12. Enable `EnableWinCtrlOverride` only after the normal custom-hotkey path is stable.
+9. Change a monitor's `Max` value in PMVD Home and verify that desktop cards are added or removed for that monitor.
+10. Right-click the tray icon -> `Other desktop apps` and verify that an app on another PMVD desktop jumps to its desktop.
+11. Configure Logitech gestures to send the default Left/Right/Up/Down hotkeys.
+12. Open tray menu -> `Edit config` and tune window rules if needed.
+13. Enable `EnableWinCtrlOverride` only after the normal custom-hotkey path is stable.

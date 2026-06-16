@@ -62,14 +62,14 @@ public sealed class ConfigStore
 
     private static void Migrate(AppConfig config)
     {
-        config.ConfigVersion = Math.Max(config.ConfigVersion, 2);
+        config.ConfigVersion = Math.Max(config.ConfigVersion, 3);
         config.WorkspaceCountPerMonitor = Math.Clamp(config.WorkspaceCountPerMonitor, 1, 12);
         config.WinEventDebounceMs = Math.Clamp(config.WinEventDebounceMs <= 0 ? 160 : config.WinEventDebounceMs, 50, 2000);
         config.Hotkeys ??= new HotkeyConfig();
         config.Rules ??= AppConfig.DefaultRules();
-        config.MonitorWindowLimits ??= [];
-        foreach (var limit in config.MonitorWindowLimits)
-            limit.MaxManagedWindows = Math.Clamp(limit.MaxManagedWindows, 0, 512);
+        config.MonitorDesktopCounts ??= [];
+        foreach (var count in config.MonitorDesktopCounts)
+            count.DesktopCount = Math.Clamp(count.DesktopCount, 1, 12);
 
         foreach (var defaultRule in AppConfig.DefaultRules())
         {

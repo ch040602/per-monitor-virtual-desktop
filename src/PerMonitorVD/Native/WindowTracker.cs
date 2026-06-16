@@ -1,6 +1,5 @@
 using PerMonitorVD.Core;
 using PerMonitorVD.Utilities;
-using PerMonitorVD.Configuration;
 
 namespace PerMonitorVD.Native;
 
@@ -11,22 +10,19 @@ public sealed class WindowTracker
     private readonly MonitorResolver _monitorResolver;
     private readonly IVirtualDesktopBridge _desktopBridge;
     private readonly WorkspaceRuntimeState _state;
-    private readonly AppConfig _config;
 
     public WindowTracker(
         WindowInspector inspector,
         WindowPlacementStore placementStore,
         MonitorResolver monitorResolver,
         IVirtualDesktopBridge desktopBridge,
-        WorkspaceRuntimeState state,
-        AppConfig config)
+        WorkspaceRuntimeState state)
     {
         _inspector = inspector;
         _placementStore = placementStore;
         _monitorResolver = monitorResolver;
         _desktopBridge = desktopBridge;
         _state = state;
-        _config = config;
     }
 
     public IReadOnlyList<IntPtr> EnumTopLevelWindows()
@@ -93,12 +89,6 @@ public sealed class WindowTracker
         {
             if (!allowCreate)
                 return null;
-
-            if (IsMonitorAtWindowLimit(monitor.MonitorKey))
-            {
-                Log.Warn($"Skip tracking {hwndKey} {info.ProcessName}; monitor {monitor.MonitorKey} reached MaxManagedWindows={_config.GetMaxManagedWindows(monitor.MonitorKey)}.");
-                return null;
-            }
 
             record = new WindowRecord
             {
@@ -178,18 +168,5 @@ public sealed class WindowTracker
             _state.Windows.Remove(key);
             Log.Info($"Removed dead window record {key}");
         }
-    }
-
-    private bool IsMonitorAtWindowLimit(string monitorKey)
-    {
-        var limit = _config.GetMaxManagedWindows(monitorKey);
-        if (limit <= 0)
-            return false;
-
-        var current = _state.Windows.Values.Count(w =>
-            !w.Ignored &&
-            string.Equals(w.MonitorKey, monitorKey, StringComparison.OrdinalIgnoreCase) &&
-            _inspector.IsAlive(w.HwndPtr));
-        return current >= limit;
     }
 }

@@ -22,19 +22,19 @@ native-windows
 ## Suggested release tag
 
 ```text
-v0.2.2
+v0.2.3
 ```
 
 ## Suggested release title
 
 ```text
-PerMonitorVD v0.2.2 - system tray startup
+PerMonitorVD v0.2.3 - per-monitor desktop count from Home
 ```
 
 ## Suggested commit message
 
 ```text
-Add system tray startup registration
+Make Home Max control per-monitor desktop count
 
 - add Ctrl+Alt+Shift+Home and tray Home entry
 - show each monitor's PMVD desktops and active apps
@@ -44,7 +44,8 @@ Add system tray startup registration
 - run as a tray resident app without duplicate-instance popups
 - register the current exe under HKCU Run when StartWithWindows is enabled
 - add Task View-like monitor desktop cards
-- add per-monitor maximum managed-window limits
+- make each monitor's Home `Max` value control that monitor's desktop count
+- remove per-monitor max-app limits
 - keep taskbar configured for all virtual desktop windows
 - add Korean and Simplified Chinese README files
 - add GitHub upload metadata
@@ -63,7 +64,8 @@ Add system tray startup registration
 - System tray resident behavior with `Start with Windows` toggle.
 - Current-user Windows startup registration via `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`.
 - Task View-like monitor lanes with desktop cards.
-- Per-monitor maximum managed-window limits from Home.
+- Per-monitor Home `Max` control that adds or removes desktop cards for that monitor.
+- Removed the unused max-app limit setting and enforcement.
 - `Ctrl+Alt+Shift+Home`, tray menu Home entry, and `pvdctl home`.
 - Self-contained Windows x64 release zip with `PerMonitorVD.exe` and `pvdctl.exe`.
 - Diagnostics export with report path output.

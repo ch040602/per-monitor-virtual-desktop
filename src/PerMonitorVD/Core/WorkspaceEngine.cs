@@ -203,6 +203,28 @@ public sealed class WorkspaceEngine
         }
     }
 
+    public async Task ReconfigureWorkspacesAsync(string reason)
+    {
+        await _gate.WaitAsync();
+        try
+        {
+            PrepareMonitorWorkspaces();
+            _windowTracker.RemoveDeadWindows();
+            _windowTracker.RefreshVisibleWindows();
+            RestoreCurrentWorkspaceLogicalWindows();
+            _stateStore.Save(_state);
+            Log.Info($"Workspace configuration refreshed. reason={reason}");
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, $"Workspace configuration refresh failed. reason={reason}");
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
     public Task ReturnToActiveCompositeAsync() => ReturnToActiveCompositeDesktopAsync();
 
     public async Task ReturnToActiveCompositeDesktopAsync()
@@ -367,7 +389,7 @@ public sealed class WorkspaceEngine
                     m.MonitorKey,
                     m.DisplayName,
                     _state.Windows.Values.Count(w => !w.Ignored && string.Equals(w.MonitorKey, m.MonitorKey, StringComparison.OrdinalIgnoreCase)),
-                    _config.GetMaxManagedWindows(m.MonitorKey)))
+                    m.Workspaces.Count))
                 .ToArray();
 
             var labelByWorkspace = workspaces.ToDictionary(w => w.WorkspaceId, w => w.WorkspaceLabel, StringComparer.OrdinalIgnoreCase);
@@ -558,12 +580,6 @@ public sealed class WorkspaceEngine
         if (targetIndex < 0 || targetIndex >= monitor.Workspaces.Count)
             return;
 
-        if (!string.Equals(record.MonitorKey, monitor.MonitorKey, StringComparison.OrdinalIgnoreCase) && IsMonitorAtWindowLimit(monitor.MonitorKey))
-        {
-            Log.Warn($"Move skipped for {record.Hwnd}; monitor {monitor.MonitorKey} reached MaxManagedWindows={_config.GetMaxManagedWindows(monitor.MonitorKey)}.");
-            return;
-        }
-
         var targetSlot = monitor.Workspaces[targetIndex];
         record.MonitorKey = monitor.MonitorKey;
         record.WorkspaceId = targetSlot.WorkspaceId;
@@ -576,19 +592,6 @@ public sealed class WorkspaceEngine
 
         _stateStore.Save(_state);
         _overlay.ShowWorkspace(monitor.MonitorKey, $"Move -> {targetSlot.Label}", _config.ShowOverlay);
-    }
-
-    private bool IsMonitorAtWindowLimit(string monitorKey)
-    {
-        var limit = _config.GetMaxManagedWindows(monitorKey);
-        if (limit <= 0)
-            return false;
-
-        var count = _state.Windows.Values.Count(w =>
-            !w.Ignored &&
-            string.Equals(w.MonitorKey, monitorKey, StringComparison.OrdinalIgnoreCase) &&
-            _windowTracker.IsAlive(w));
-        return count >= limit;
     }
 
     private IEnumerable<WindowRecord> GetSwitchableWindows(string workspaceId, string monitorKey)
@@ -773,13 +776,15 @@ public sealed class WorkspaceEngine
             monitor.BoundsTop = monitorInfo.Bounds.Top;
             monitor.BoundsWidth = monitorInfo.Bounds.Width;
             monitor.BoundsHeight = monitorInfo.Bounds.Height;
-            monitor.Workspaces = EnsureWorkspaceSlots(monitor, monitorIndexBaseLabel: globalLabel, desktops);
+            var workspaceCount = _config.GetDesktopCount(monitorInfo.Key);
+            monitor.Workspaces = EnsureWorkspaceSlots(monitor, monitorIndexBaseLabel: globalLabel, desktops, workspaceCount);
             if (monitor.CurrentWorkspaceIndex < 0 || monitor.CurrentWorkspaceIndex >= monitor.Workspaces.Count)
-                monitor.CurrentWorkspaceIndex = 0;
+                monitor.CurrentWorkspaceIndex = Math.Max(0, monitor.Workspaces.Count - 1);
+            ReassignWindowsFromRemovedWorkspaces(monitor);
 
             rebuilt.Add(monitor);
             consumed.Add(monitor);
-            globalLabel += _config.WorkspaceCountPerMonitor;
+            globalLabel += workspaceCount;
         }
 
         _state.Monitors = rebuilt;
@@ -814,13 +819,13 @@ public sealed class WorkspaceEngine
         Log.Info($"Migrated monitor identity {oldKey} -> {monitorInfo.Key}");
     }
 
-    private List<WorkspaceSlot> EnsureWorkspaceSlots(MonitorState monitor, int monitorIndexBaseLabel, IReadOnlyList<NativeDesktopInfo> knownDesktops)
+    private List<WorkspaceSlot> EnsureWorkspaceSlots(MonitorState monitor, int monitorIndexBaseLabel, IReadOnlyList<NativeDesktopInfo> knownDesktops, int workspaceCount)
     {
         var slots = new List<WorkspaceSlot>();
         var byId = monitor.Workspaces.ToDictionary(w => w.WorkspaceId, StringComparer.OrdinalIgnoreCase);
         var desktops = knownDesktops.ToList();
 
-        for (var i = 0; i < _config.WorkspaceCountPerMonitor; i++)
+        for (var i = 0; i < workspaceCount; i++)
         {
             var label = (monitorIndexBaseLabel + i).ToString();
             var workspaceId = $"{monitor.MonitorKey}-W{i + 1}";
@@ -865,6 +870,24 @@ public sealed class WorkspaceEngine
         }
 
         return slots;
+    }
+
+    private void ReassignWindowsFromRemovedWorkspaces(MonitorState monitor)
+    {
+        if (monitor.Workspaces.Count == 0)
+            return;
+
+        var retainedWorkspaceIds = monitor.Workspaces.Select(w => w.WorkspaceId).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var fallbackSlot = monitor.Workspaces[Math.Clamp(monitor.CurrentWorkspaceIndex, 0, monitor.Workspaces.Count - 1)];
+
+        foreach (var window in _state.Windows.Values.Where(w =>
+                     !w.Ignored &&
+                     string.Equals(w.MonitorKey, monitor.MonitorKey, StringComparison.OrdinalIgnoreCase) &&
+                     !retainedWorkspaceIds.Contains(w.WorkspaceId)))
+        {
+            Log.Info($"Reassigned {window.Hwnd} {window.ProcessName} from removed workspace {window.WorkspaceId} to {fallbackSlot.WorkspaceId}.");
+            window.WorkspaceId = fallbackSlot.WorkspaceId;
+        }
     }
 
     private void EnsureOnActiveCompositeDesktop()

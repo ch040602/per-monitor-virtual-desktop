@@ -4,7 +4,7 @@ namespace PerMonitorVD.Configuration;
 
 public sealed class AppConfig
 {
-    public int ConfigVersion { get; set; } = 2;
+    public int ConfigVersion { get; set; } = 3;
 
     public int WorkspaceCountPerMonitor { get; set; } = 3;
 
@@ -71,9 +71,9 @@ public sealed class AppConfig
     public bool IgnoreTitlelessNonAppWindows { get; set; } = true;
 
     /// <summary>
-    /// Per-monitor managed-window caps. 0 means unlimited.
+    /// Per-monitor PMVD desktop counts. Missing monitors use WorkspaceCountPerMonitor.
     /// </summary>
-    public List<MonitorWindowLimit> MonitorWindowLimits { get; set; } = [];
+    public List<MonitorDesktopCount> MonitorDesktopCounts { get; set; } = [];
 
     public HotkeyConfig Hotkeys { get; set; } = new();
 
@@ -122,35 +122,35 @@ public sealed class AppConfig
         AutoRepairOnMonitorChange = other.AutoRepairOnMonitorChange;
         StrictWindowFiltering = other.StrictWindowFiltering;
         IgnoreTitlelessNonAppWindows = other.IgnoreTitlelessNonAppWindows;
-        MonitorWindowLimits = other.MonitorWindowLimits;
+        MonitorDesktopCounts = other.MonitorDesktopCounts;
         Hotkeys = other.Hotkeys;
         Rules = other.Rules;
     }
 
-    public int GetMaxManagedWindows(string monitorKey)
+    public int GetDesktopCount(string monitorKey)
     {
-        var limit = MonitorWindowLimits.FirstOrDefault(l => string.Equals(l.MonitorKey, monitorKey, StringComparison.OrdinalIgnoreCase));
-        return Math.Max(0, limit?.MaxManagedWindows ?? 0);
+        var count = MonitorDesktopCounts.FirstOrDefault(l => string.Equals(l.MonitorKey, monitorKey, StringComparison.OrdinalIgnoreCase));
+        return Math.Clamp(count?.DesktopCount ?? WorkspaceCountPerMonitor, 1, 12);
     }
 
-    public void SetMaxManagedWindows(string monitorKey, int maxManagedWindows)
+    public void SetDesktopCount(string monitorKey, int desktopCount)
     {
-        var normalized = Math.Clamp(maxManagedWindows, 0, 512);
-        var limit = MonitorWindowLimits.FirstOrDefault(l => string.Equals(l.MonitorKey, monitorKey, StringComparison.OrdinalIgnoreCase));
-        if (limit is null)
+        var normalized = Math.Clamp(desktopCount, 1, 12);
+        var count = MonitorDesktopCounts.FirstOrDefault(l => string.Equals(l.MonitorKey, monitorKey, StringComparison.OrdinalIgnoreCase));
+        if (count is null)
         {
-            MonitorWindowLimits.Add(new MonitorWindowLimit { MonitorKey = monitorKey, MaxManagedWindows = normalized });
+            MonitorDesktopCounts.Add(new MonitorDesktopCount { MonitorKey = monitorKey, DesktopCount = normalized });
             return;
         }
 
-        limit.MaxManagedWindows = normalized;
+        count.DesktopCount = normalized;
     }
 }
 
-public sealed class MonitorWindowLimit
+public sealed class MonitorDesktopCount
 {
     public string MonitorKey { get; set; } = "";
-    public int MaxManagedWindows { get; set; }
+    public int DesktopCount { get; set; }
 }
 
 public sealed class HotkeyConfig

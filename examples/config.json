@@ -1,5 +1,5 @@
 {
-  "ConfigVersion": 2,
+  "ConfigVersion": 3,
   "WorkspaceCountPerMonitor": 3,
   "ActiveMonitorPolicy": "mouse",
   "SwitchingStrategy": "nativeParking",
@@ -16,7 +16,7 @@
   "AutoRepairOnMonitorChange": true,
   "StrictWindowFiltering": true,
   "IgnoreTitlelessNonAppWindows": true,
-  "MonitorWindowLimits": [],
+  "MonitorDesktopCounts": [],
   "Hotkeys": {
     "SwitchPrev": "Ctrl+Alt+Shift+Left",
     "SwitchNext": "Ctrl+Alt+Shift+Right",

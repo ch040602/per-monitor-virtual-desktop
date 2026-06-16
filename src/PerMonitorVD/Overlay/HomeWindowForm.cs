@@ -227,7 +227,7 @@ public sealed class HomeWindowForm : Form
 
         var title = new Label
         {
-            Text = $"{monitor.MonitorName}  {FormatLimit(monitor)}",
+            Text = $"{monitor.MonitorName}  {monitor.WindowCount} apps",
             ForeColor = Color.White,
             Font = new Font(Font.FontFamily, 10, FontStyle.Bold),
             Dock = DockStyle.Fill,
@@ -236,35 +236,35 @@ public sealed class HomeWindowForm : Form
         };
         header.Controls.Add(title, 0, 0);
 
-        var maxLabel = new Label
+        var desktopLabel = new Label
         {
             Text = "Max",
             ForeColor = TextMuted,
             AutoSize = true,
             Padding = new Padding(0, 9, 6, 0)
         };
-        header.Controls.Add(maxLabel, 1, 0);
+        header.Controls.Add(desktopLabel, 1, 0);
 
-        var numeric = new NumericUpDown
+        var desktopNumeric = new NumericUpDown
         {
-            Minimum = 0,
-            Maximum = 512,
-            Width = 66,
-            Value = Math.Clamp(monitor.MaxManagedWindows, 0, 512),
+            Minimum = 1,
+            Maximum = 12,
+            Width = 56,
+            Value = Math.Clamp(monitor.DesktopCount, 1, 12),
             Tag = monitor.MonitorKey,
             BorderStyle = BorderStyle.FixedSingle
         };
-        numeric.ValueChanged += (_, _) =>
+        desktopNumeric.ValueChanged += async (_, _) =>
         {
-            if (numeric.Tag is not string monitorKey)
+            if (desktopNumeric.Tag is not string monitorKey)
                 return;
 
-            _config.SetMaxManagedWindows(monitorKey, (int)numeric.Value);
+            _config.SetDesktopCount(monitorKey, (int)desktopNumeric.Value);
             _configStore.Save(_config);
-            if (_snapshot is not null)
-                BindOverview(_snapshot);
+            await _engine.ReconfigureWorkspacesAsync("home-desktop-count");
+            await RefreshSnapshotAsync();
         };
-        header.Controls.Add(numeric, 2, 0);
+        header.Controls.Add(desktopNumeric, 2, 0);
 
         return header;
     }
@@ -432,13 +432,6 @@ public sealed class HomeWindowForm : Form
         button.ForeColor = Color.White;
         button.Margin = new Padding(6, 4, 0, 4);
         button.Padding = new Padding(10, 4, 10, 4);
-    }
-
-    private static string FormatLimit(MonitorHomeItem monitor)
-    {
-        return monitor.MaxManagedWindows <= 0
-            ? $"{monitor.WindowCount}/all"
-            : $"{monitor.WindowCount}/{monitor.MaxManagedWindows}";
     }
 
     private static string FormatAppName(WindowHomeItem window)

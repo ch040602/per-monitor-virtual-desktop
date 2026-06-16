@@ -46,7 +46,7 @@ public sealed class PerMonitorVdApplicationContext : ApplicationContext
         var monitorResolver = new MonitorResolver(_config);
         var inspector = new WindowInspector(_config);
         var placementStore = new WindowPlacementStore();
-        var tracker = new WindowTracker(inspector, placementStore, monitorResolver, desktopBridge, _state, _config);
+        var tracker = new WindowTracker(inspector, placementStore, monitorResolver, desktopBridge, _state);
 
         _engine = new WorkspaceEngine(
             _config,

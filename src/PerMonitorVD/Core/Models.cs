@@ -123,7 +123,7 @@ public sealed record MonitorHomeItem(
     string MonitorKey,
     string MonitorName,
     int WindowCount,
-    int MaxManagedWindows);
+    int DesktopCount);
 
 public sealed record WindowHomeItem(
     string Hwnd,
