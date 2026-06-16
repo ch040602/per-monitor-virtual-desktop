@@ -47,6 +47,7 @@ public sealed class TrayIconService : IDisposable
         menu.Items.Add("Pause", null, async (_, _) => await _router.ExecuteAsync(new WorkspaceCommand { Type = WorkspaceCommandType.Pause }));
         menu.Items.Add("Resume", null, async (_, _) => await _router.ExecuteAsync(new WorkspaceCommand { Type = WorkspaceCommandType.Resume }));
         menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add(CreateStartWithWindowsMenuItem());
         menu.Items.Add("Edit config", null, (_, _) => new ConfigEditorForm(_configStore, _onConfigSaved).Show());
         menu.Items.Add("Open config.json", null, (_, _) => OpenPath(AppPaths.ConfigPath));
         menu.Items.Add("Open log file", null, (_, _) => OpenPath(AppPaths.LogPath));
@@ -55,6 +56,24 @@ public sealed class TrayIconService : IDisposable
 
         menu.Opening += async (_, _) => await RefreshOtherDesktopAppsMenuAsync();
         return menu;
+    }
+
+    private ToolStripMenuItem CreateStartWithWindowsMenuItem()
+    {
+        var config = _configStore.LoadOrCreate();
+        var item = new ToolStripMenuItem("Start with Windows")
+        {
+            Checked = config.StartWithWindows,
+            CheckOnClick = true
+        };
+        item.CheckedChanged += (_, _) =>
+        {
+            var latest = _configStore.LoadOrCreate();
+            latest.StartWithWindows = item.Checked;
+            _configStore.Save(latest);
+            _onConfigSaved(latest);
+        };
+        return item;
     }
 
     private async Task RefreshOtherDesktopAppsMenuAsync()

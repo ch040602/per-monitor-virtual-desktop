@@ -15,11 +15,6 @@ internal static class Program
         using var singleInstance = new SingleInstanceGuard("Local\\PerMonitorVD.App");
         if (!singleInstance.IsOwner)
         {
-            MessageBox.Show(
-                "PerMonitorVD is already running. Use pvdctl.exe or the tray icon to control it.",
-                "PerMonitorVD",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
             return;
         }
 

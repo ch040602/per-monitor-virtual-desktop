@@ -34,6 +34,7 @@ public sealed class PerMonitorVdApplicationContext : ApplicationContext
 
         _configStore = new ConfigStore();
         _config = _configStore.LoadOrCreate();
+        StartupRegistrationService.Apply(_config.StartWithWindows);
         TaskbarSettingsService.EnsureAllDesktopAppsVisible(_config.EnsureTaskbarShowsAllDesktopWindows);
 
         _stateStore = new StateStore();
@@ -92,6 +93,7 @@ public sealed class PerMonitorVdApplicationContext : ApplicationContext
     private void ReloadConfigFromEditor(AppConfig config)
     {
         _config.CopyFrom(config);
+        StartupRegistrationService.Apply(_config.StartWithWindows);
         TaskbarSettingsService.EnsureAllDesktopAppsVisible(_config.EnsureTaskbarShowsAllDesktopWindows);
         _hotkeys.RegisterFromConfig(_config);
         _ = _engine.RefreshAsync("config-reload");

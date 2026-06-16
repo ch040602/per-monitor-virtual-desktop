@@ -22,25 +22,27 @@ native-windows
 ## Suggested release tag
 
 ```text
-v0.2.1
+v0.2.2
 ```
 
 ## Suggested release title
 
 ```text
-PerMonitorVD v0.2.1 - tray jump menu and exe release
+PerMonitorVD v0.2.2 - system tray startup
 ```
 
 ## Suggested commit message
 
 ```text
-Add tray jump menu and release packaging
+Add system tray startup registration
 
 - add Ctrl+Alt+Shift+Home and tray Home entry
 - show each monitor's PMVD desktops and active apps
 - move apps by dragging app chips onto desktop cards
 - jump to apps on other PMVD desktops from the tray menu
 - add pvdctl activate-window
+- run as a tray resident app without duplicate-instance popups
+- register the current exe under HKCU Run when StartWithWindows is enabled
 - add Task View-like monitor desktop cards
 - add per-monitor maximum managed-window limits
 - keep taskbar configured for all virtual desktop windows
@@ -58,6 +60,8 @@ Add tray jump menu and release packaging
 - Drag-and-drop app movement between desktop cards.
 - Tray `Other desktop apps` menu that jumps to an app's PMVD desktop.
 - `pvdctl activate-window --hwnd <HWND>` for scriptable app jumps.
+- System tray resident behavior with `Start with Windows` toggle.
+- Current-user Windows startup registration via `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`.
 - Task View-like monitor lanes with desktop cards.
 - Per-monitor maximum managed-window limits from Home.
 - `Ctrl+Alt+Shift+Home`, tray menu Home entry, and `pvdctl home`.

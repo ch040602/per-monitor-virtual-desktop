@@ -40,6 +40,7 @@ It does **not** make Windows Shell expose multiple simultaneously active native 
 - Tray menu lists apps on other PMVD desktops so you can jump directly to the desktop containing that app.
 - Task View-like monitor lanes with workspace cards and per-monitor maximum managed-window limits.
 - Best-effort Windows taskbar setting so the taskbar shows apps from all native virtual desktops.
+- Runs as a system tray app and can register itself to start with Windows.
 
 ## Projects
 
@@ -62,7 +63,7 @@ src/pvdctl
 
 ## Build
 
-For normal use, download the `per-monitor-virtual-desktop-*-win-x64.zip` asset from GitHub Releases, unzip it, then run:
+For normal use, download the `per-monitor-virtual-desktop-*-win-x64.zip` asset from GitHub Releases, unzip it to the folder where you want to keep it, then run:
 
 ```powershell
 .\PerMonitorVD.exe
@@ -144,6 +145,12 @@ pvdctl status
 %LOCALAPPDATA%\PerMonitorVD\PerMonitorVD.log
 %LOCALAPPDATA%\PerMonitorVD\reports\diagnostics-*.txt
 ```
+
+## System tray and startup
+
+PerMonitorVD runs without a normal taskbar app button. After launch, use the icon in the Windows system tray/notification area, near Wi-Fi, Bluetooth, and volume. If Windows hides it in the tray overflow, enable it from Windows Settings -> Personalization -> Taskbar -> Other system tray icons.
+
+`StartWithWindows` is enabled by default. On startup, PerMonitorVD registers the current `PerMonitorVD.exe` path under the current user's `Run` key so it starts when Windows signs in. If you move the unzipped folder later, run `PerMonitorVD.exe` once from the new location to refresh the startup path. You can toggle this from the tray menu with `Start with Windows` or edit `%LOCALAPPDATA%\PerMonitorVD\config.json`.
 
 ## Important limitations
 

@@ -37,6 +37,7 @@ public sealed class HomeWindowForm : Form
         Text = "PerMonitorVD Home";
         FormBorderStyle = FormBorderStyle.SizableToolWindow;
         StartPosition = FormStartPosition.Manual;
+        ShowInTaskbar = false;
         TopMost = true;
         Opacity = 0.97;
         BackColor = OverlayBack;

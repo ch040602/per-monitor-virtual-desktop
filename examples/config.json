@@ -9,6 +9,7 @@
   "RenameManagedDesktops": true,
   "ShowOverlay": true,
   "StartPaused": false,
+  "StartWithWindows": true,
   "EnsureTaskbarShowsAllDesktopWindows": true,
   "EnableWinEventHooks": true,
   "WinEventDebounceMs": 160,

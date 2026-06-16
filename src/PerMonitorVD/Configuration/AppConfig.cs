@@ -36,6 +36,11 @@ public sealed class AppConfig
     public bool StartPaused { get; set; } = false;
 
     /// <summary>
+    /// Register PerMonitorVD under HKCU Run so it starts with Windows and remains a tray app.
+    /// </summary>
+    public bool StartWithWindows { get; set; } = true;
+
+    /// <summary>
     /// Best-effort Windows setting: show taskbar windows from all native virtual desktops.
     /// </summary>
     public bool EnsureTaskbarShowsAllDesktopWindows { get; set; } = true;
@@ -110,6 +115,7 @@ public sealed class AppConfig
         RenameManagedDesktops = other.RenameManagedDesktops;
         ShowOverlay = other.ShowOverlay;
         StartPaused = other.StartPaused;
+        StartWithWindows = other.StartWithWindows;
         EnsureTaskbarShowsAllDesktopWindows = other.EnsureTaskbarShowsAllDesktopWindows;
         EnableWinEventHooks = other.EnableWinEventHooks;
         WinEventDebounceMs = other.WinEventDebounceMs;
